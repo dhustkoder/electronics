@@ -27,30 +27,27 @@ int main(void)
 	signal(SIGTERM, sig_handler);
 
 	pinMode(0, OUTPUT);
-	digitalWrite(0, LOW);	
+	int delaytime = 0;
+	unsigned char up = 1;
+
+	for (;;) {
+		digitalWrite(0, HIGH);
+		delay(delaytime);
+		digitalWrite(0, LOW);
+		delay(delaytime);
+
+		if (up) {
+			delaytime += 15;
+			if (delaytime >= 300)
+				up = 0;
+		} else {
+			delaytime -= 15;
+			if (delaytime <= 0)
+				up = 1;
+		}	
+	}
 
 
-	printf("o: turn on/off\ne: exit\n");
-
-	char op;
-	int status = LOW;
-
-	while (1) {
-		printf("Enter op: ");
-		scanf("%c%*c", &op);
-
-		if (op == 'o')
-			status = status == LOW ? HIGH : LOW;
-		else if (op == 'e')
-			break;
-		else
-			printf("No option %c\n", op);
-
-		digitalWrite(0, status);
-	};
-
-
-	cleanup();
 	return EXIT_SUCCESS;
 }
 
