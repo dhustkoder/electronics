@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <wiringPi.h>
 
 
@@ -28,7 +29,7 @@ int main(void)
 
 	pinMode(0, OUTPUT);
 	int delaytime = 0;
-	unsigned char up = 1;
+	bool up = true;
 
 	for (;;) {
 		digitalWrite(0, HIGH);
@@ -39,11 +40,11 @@ int main(void)
 		if (up) {
 			delaytime += 15;
 			if (delaytime >= 300)
-				up = 0;
+				up = false;
 		} else {
 			delaytime -= 15;
 			if (delaytime <= 0)
-				up = 1;
+				up = true;
 		}	
 	}
 
