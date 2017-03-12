@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <errno.h>
@@ -10,17 +11,16 @@
 
 static const int kLed = 17;
 
-
+static inline void run(unsigned int delaytime, time_t runtime);
 static inline void cleanup();
-static void sig_handler(int sig);
 
-static inline void run(int delaytime, time_t runtime);
+static void sig_handler(int sig);
 
 
 int main(void)
 {
 	if (wiringPiSetupGpio()) {
-		printf("Couldn't initialize WiringPi: %d", errno);
+		fprintf(stderr, "Couldn't initialize WiringPi: %s", strerror(errno));
 		return EXIT_FAILURE;
 	} 
 
@@ -38,12 +38,15 @@ int main(void)
 
 		system("clear");
 		
-		printf("delay time: %u\n"
-		       "run time: %u\n"
-		       "r: run\n"
-		       "d: set delay time\n"
-		       "s: set run time\n"
-		       "e: exit\n"
+		printf("Delay time: %u ms\n"
+		       "Run time:   %u s\n"
+                       "::::::::::::::::::\n"
+		       "Options:\n"
+		       "r: Run\n"
+		       "d: Set delay time\n"
+		       "s: Set run time\n"
+		       "e: Exit\n"
+		       "::::::::::::::::::\n"
 		       "Enter an option: ",
 		       delaytime, runtime);
 
@@ -68,13 +71,13 @@ int main(void)
 }
 
 
-void run(const int delaytime, const time_t runtime)
+void run(const unsigned int delaytime, const time_t runtime)
 {
 	puts("[:: Running ::]");
 
-	time_t begin = time(NULL);
+	if (delaytime > 0) {
 
-	if (delaytime) {
+		const time_t begin = time(NULL);
 
 		do {
 			digitalWrite(kLed, HIGH);
@@ -103,7 +106,8 @@ void cleanup()
 	digitalWrite(kLed, LOW);
 }
 
-void sig_handler(int sig)
+
+void sig_handler(const int sig)
 {
 	cleanup();
 	exit(sig);	

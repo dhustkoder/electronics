@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <errno.h>
@@ -28,7 +29,7 @@ static void sig_handler(int sig)
 int main(void)
 {
 	if (wiringPiSetupGpio()) {
-		printf("Couldn't initialize WiringPi: %d", errno);
+		fprintf(stderr, "Couldn't initialize WiringPi: %s", strerror(errno));
 		return EXIT_FAILURE;
 	} 
 
