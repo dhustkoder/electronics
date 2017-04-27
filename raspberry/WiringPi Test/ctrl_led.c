@@ -5,16 +5,14 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <time.h>
-
 #include <wiringPi.h>
 
 
-static const int kLed = 17;
+static const int kLed = 18;
 
 static inline void run(unsigned int delaytime, time_t runtime);
 static inline void cleanup();
-
-static void sig_handler(int sig);
+static inline void sig_handler(int sig);
 
 
 int main(void)
@@ -76,33 +74,26 @@ void run(const unsigned int delaytime, const time_t runtime)
 	puts("[:: Running ::]");
 
 	if (delaytime > 0) {
-
 		const time_t begin = time(NULL);
-
 		do {
 			digitalWrite(kLed, HIGH);
 			delay(delaytime);
 			digitalWrite(kLed, LOW);
 			delay(delaytime);
 		} while ((time(NULL) - begin) < runtime);
-
 	} else {
-
 		digitalWrite(kLed, HIGH);
 		delay(runtime * 1000);
 	}
 
-
 	puts("[:: Done ::]");
 	delay(500);
-
 	cleanup();
 }
 
 
 void cleanup()
 {
-	puts("cleanup");
 	digitalWrite(kLed, LOW);
 }
 
