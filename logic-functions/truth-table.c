@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "logic-functions.h"
 
@@ -47,38 +48,47 @@ static inline char* maketbl(const char* const expr)
 	const int lines = (int) powf(2, bits);
 	char* const buffer = calloc(linechars * lines + 1, sizeof(char));
 	unsigned char bools[bits];
-	unsigned char result;
+	memset(bools, 0, sizeof(bools));
 
 	for (int i = 0; i < lines; ++i) {
 		char* line = &buffer[linechars * i];
 		bitstostr(bits, i, line);
 
-		for (int j = 0; j < bits; ++j)
-			bools[j] = (i&(0x01<<j))>>j;
+		for (int j = bits; j > 0; --j)
+			bools[bits - j] = (i&(0x01<<(j - 1)))>>(j - 1);
 
 		const char* p = expr;
-		for (int j = result = 0; j < bits; j += 2) {
+		signed char result = -1;
+
+		for (int j = 0; j < bits; j += 2) {
 			while (*p != '\0' && (*p < 'A' || *p > 'H'))
 				++p;
 
-			const unsigned char x = *(p - 1) == '~' ? !bools[get_bit_index(*p)] : bools[get_bit_index(*p)];
+			const unsigned char x = *(p - 1) == '~'
+				? !bools[get_bit_index(*p)]
+				: bools[get_bit_index(*p)];
 			++p;
 
 			while (*p != '\0' && (*p < 'A' || *p > 'H'))
 				++p;
 
-			const unsigned char y = *(p - 1) == '~' ? !bools[get_bit_index(*p)] : bools[get_bit_index(*p)];
+			const unsigned char y = *(p - 1) == '~'
+				? !bools[get_bit_index(*p)]
+				: bools[get_bit_index(*p)];
 
-			LogicFunc lfun;
-			while (p >= expr) {
-				lfun = get_logic_func(*p);
+			LogicFunc lfun = NULL;
+			for (const char* pp = p - 1; pp >= expr; --pp) {
+				lfun = get_logic_func(*pp);
 				if (lfun != NULL)
 					break;
-				--p;
 			}
 
-			if (lfun != NULL)
-				result |= lfun(x, y);
+			if (lfun != NULL) {
+				if (result != -1)
+					result = lfun(result, lfun(x, y));
+				else
+					result = lfun(x, y);
+			}
 		}
 
 		line[linechars - 3] = ':';
