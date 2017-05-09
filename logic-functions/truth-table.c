@@ -26,9 +26,21 @@ static inline int get_bit_index(const char symbol)
 static inline int bitscnt(const char* const expr)
 {
 	int cnt = 0;
-	for (const char* p = expr; *p != '\0'; ++p)
-		if (*p >= 'A' && *p <= 'H')
-			++cnt;
+	char alpha[8] = { 0 };
+
+	for (const char* p = expr; *p != '\0'; ++p) {
+		if (*p >= 'A' && *p <= 'H') {
+			int i;
+
+			for (i = 0; i < cnt; ++i)
+				if (alpha[i] == *p)
+					break;
+
+			if (i == cnt)
+				alpha[cnt++] = *p;
+		}
+	}
+
 	return cnt;
 }
 
@@ -75,6 +87,8 @@ static inline char* maketbl(const char* const expr)
 			const unsigned char y = *(p - 1) == '~'
 				? !bools[get_bit_index(*p)]
 				: bools[get_bit_index(*p)];
+
+			++p;
 
 			LogicFunc lfun = NULL;
 			for (const char* pp = p - 1; pp >= expr; --pp) {
