@@ -53,6 +53,22 @@ static inline void bitstostr(const int bits, unsigned char val, char* const out)
 }
 
 
+static inline const char* find_next_bit_symbol(const char* p)
+{
+	while (*p != '\0' && (*p < 'A' || *p > 'H'))
+		++p;
+	return *p != '\0' ? p : NULL;
+}
+
+
+static inline char find_prev_lf_symbol(const char* const str, const char* p)
+{
+	while (p >= str && *p != '&' && *p != '|')
+		--p;
+	return p >= str ? *p : '\0';
+}
+
+
 static inline char* maketbl(const char* const expr)
 {
 	const int bits = bitscnt(expr);
@@ -74,29 +90,20 @@ static inline char* maketbl(const char* const expr)
 		signed char result = -1;
 
 		for (int j = 0; j < bits; j += 2) {
-			while (*p != '\0' && (*p < 'A' || *p > 'H'))
-				++p;
+			p = find_next_bit_symbol(p);
 
 			const unsigned char x = *(p - 1) == '~'
 				? !bools[get_bit_index(*p)]
 				: bools[get_bit_index(*p)];
-			++p;
 
-			while (*p != '\0' && (*p < 'A' || *p > 'H'))
-				++p;
+			p = find_next_bit_symbol(++p);
 
 			const unsigned char y = *(p - 1) == '~'
 				? !bools[get_bit_index(*p)]
 				: bools[get_bit_index(*p)];
 
-			++p;
 
-			LogicFunc lfun = NULL;
-			for (const char* pp = p - 1; pp >= expr; --pp) {
-				lfun = get_logic_func(*pp);
-				if (lfun != NULL)
-					break;
-			}
+			const LogicFunc lfun = get_logic_func(find_prev_lf_symbol(expr, --p));
 
 			if (lfun != NULL) {
 				if (result != -1)
