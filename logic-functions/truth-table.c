@@ -58,6 +58,7 @@ static inline char* maketbl(const char* const expr)
 	const int bits = bitscnt(expr);
 	const int linechars = bits + 3;
 	const int lines = (int) powf(2, bits);
+
 	char* const buffer = calloc(linechars * lines + 1, sizeof(char));
 	unsigned char bools[bits];
 	memset(bools, 0, sizeof(bools));
@@ -122,11 +123,11 @@ int main(const int argc, const char* const * argv)
 		return EXIT_FAILURE;
 	}
 
-	char* const buffer = maketbl(argv[1]);
+	char* const table = maketbl(argv[1]);
 
-	printf("%s", buffer);
+	printf("%s", table);
 
-	free(buffer);
+	free(table);
 	return EXIT_SUCCESS;
 }
 
