@@ -6,7 +6,7 @@ enum LedPins {
 	PIN_INPUT_A = 2,
 	PIN_INPUT_B = 3,
 	PIN_OUTPUT  = 4,
-	PIN_SWITCH  = 6
+	PIN_SWITCH  = 5
 };
 
 
