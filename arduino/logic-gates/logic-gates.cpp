@@ -9,8 +9,8 @@
 enum Pin {
 	PIN_INPUT_A    = 2,
 	PIN_INPUT_B    = 3,
+	PIN_OUTPUT     = 4,
 	PIN_SWITCHER   = 5,
-	PIN_OUTPUT     = 4
 };
 
 
@@ -46,7 +46,7 @@ static inline LogicGate& operator--(LogicGate& gate)
 
 static bool switchpin_released = true;
 static LogicGate currgate = LOGIC_GATE_FIRST;
-volatile time_t lasttime;
+volatile time_t last_interaction_time;
 
 
 static inline bool executeLogicFunction(LogicGate gate, bool a, bool b)
@@ -73,6 +73,7 @@ static inline void hibernate()
 	sleep_cpu();
 }
 
+
 void setup()
 {
 	Serial.begin(9600);
@@ -80,22 +81,23 @@ void setup()
 	pinMode(PIN_INPUT_B, INPUT);
 	pinMode(PIN_SWITCHER, INPUT);
 	pinMode(PIN_OUTPUT, OUTPUT);
-	lasttime = now();
-	void(*wakeup)() = [] { lasttime = now(); };
-	attachInterrupt(digitalPinToInterrupt(PIN_INPUT_A), wakeup, CHANGE);
-	attachInterrupt(digitalPinToInterrupt(PIN_INPUT_B), wakeup, CHANGE);
+
+	// interrupts to keep track of user's last interaction
+	void(*interr)() = [] { last_interaction_time = now(); };
+	attachInterrupt(digitalPinToInterrupt(PIN_INPUT_A), interr, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(PIN_INPUT_B), interr, CHANGE);
+	last_interaction_time = now();
 }
 
 
 void loop()
 {
-	if ((now() - lasttime) > 10) {
+	if ((now() - last_interaction_time) > 5) {
 		Serial.println("hibernating...");
-		delay(150);
+		delay(150); // let the write to serial complete
 		hibernate();
 		Serial.println("waking up...");
 	}
-
 
 	if (digitalRead(PIN_SWITCHER) == LOW) {
 		if (switchpin_released) {
