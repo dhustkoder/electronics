@@ -2,8 +2,11 @@
 #include <avr/sleep.h>
 #include <avr/power.h>
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <Time.h>
+
+#ifdef DEBUG_
+#include <SoftwareSerial.h>
+#endif /* DEBUG_ */
 
 
 enum Pin {
@@ -46,9 +49,8 @@ static inline LogicGate& operator--(LogicGate& gate)
 
 
 static LogicGate currgate = LOGIC_GATE_FIRST;
-static bool pin_switch_pressed = false;
+static bool pin_switcher_pressed = false;
 static time_t last_interaction = 0;
-volatile bool has_interaction = false;
 
 
 static inline bool executeLogicFunction(LogicGate gate, bool a, bool b)
@@ -65,61 +67,68 @@ static inline bool executeLogicFunction(LogicGate gate, bool a, bool b)
 }
 
 
-static inline void hibernate()
+static inline void sleepUntilInterrupt()
 {
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	cli();
 	sleep_enable();
 	sleep_bod_disable();
 	sei();
+	interrupts();
 	sleep_cpu();
+	noInterrupts();
 }
 
 
 void setup()
 {
+#ifdef DEBUG_
 	Serial.begin(9600);
+#endif /* DEBUG_ */
 	pinMode(PIN_INTERRUPT, INPUT);
 	pinMode(PIN_INPUT_A, INPUT);
 	pinMode(PIN_INPUT_B, INPUT);
 	pinMode(PIN_SWITCHER, INPUT);
 	pinMode(PIN_OUTPUT, OUTPUT);
-	const auto dummy = [] { has_interaction = true; };
-	attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), dummy, CHANGE);
+	const auto dummyISP = []{};
+	attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), dummyISP, CHANGE);
 }
 
 
 void loop()
 {
-	if (!has_interaction) {
-		Serial.println("Hibernating...");
-		delay(150);  // let it write to serial before hibernating
-		hibernate(); // hibernate until next user's interaction
-		Serial.println("Waking up...");
-	}
+#ifdef DEBUG_
+	Serial.println("Hibernating...");
+	Serial.flush();
+#endif /* DEBUG_ */
 
-	Serial.println("Processing...");
-	has_interaction = false;
+	sleepUntilInterrupt();
+
+#ifdef DEBUG_
+	Serial.println("Waking up...");
+	Serial.flush();
+#endif /* DEBUG_ */	
+
 	last_interaction = now();
 
 	do {
 		if (digitalRead(PIN_SWITCHER) == LOW) {
-			if (!pin_switch_pressed) {
+			if (!pin_switcher_pressed) {
+				pin_switcher_pressed = true;
 				++currgate;
-				pin_switch_pressed = true;
-				delay(50); // button bounce
+				delay(50);
 			}
-		} else {
-			pin_switch_pressed = false;
+		} else if (pin_switcher_pressed) {
+			pin_switcher_pressed = false;
+			delay(50);
 		}
 
-		const bool a = digitalRead(PIN_INPUT_A) == LOW;
-		const bool b = digitalRead(PIN_INPUT_B) == LOW;
-		const bool result = executeLogicFunction(currgate, a, b);
-		digitalWrite(PIN_OUTPUT, result ? HIGH : LOW);
+		const bool a   = digitalRead(PIN_INPUT_A) == LOW;
+		const bool b   = digitalRead(PIN_INPUT_B) == LOW;
+		const bool out = executeLogicFunction(currgate, a, b);
+		digitalWrite(PIN_OUTPUT, out ? HIGH : LOW);
+		
 	} while ((now() - last_interaction) < 1);
+
 }
-
-
-
 
