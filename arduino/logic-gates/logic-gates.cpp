@@ -7,10 +7,11 @@
 
 
 enum Pin {
-	PIN_INPUT_A    = 2,
-	PIN_INPUT_B    = 3,
-	PIN_OUTPUT     = 4,
-	PIN_SWITCHER   = 5,
+	PIN_INTERRUPT  = 2,
+	PIN_INPUT_A    = 4,
+	PIN_INPUT_B    = 5,
+	PIN_OUTPUT     = 6,
+	PIN_SWITCHER   = 7,
 };
 
 
@@ -44,9 +45,10 @@ static inline LogicGate& operator--(LogicGate& gate)
 }
 
 
-static bool switchpin_released = true;
 static LogicGate currgate = LOGIC_GATE_FIRST;
-volatile time_t last_interaction_time;
+static bool pin_switch_pressed = false;
+static time_t last_interaction = 0;
+volatile bool has_interaction = false;
 
 
 static inline bool executeLogicFunction(LogicGate gate, bool a, bool b)
@@ -77,42 +79,45 @@ static inline void hibernate()
 void setup()
 {
 	Serial.begin(9600);
+	pinMode(PIN_INTERRUPT, INPUT);
 	pinMode(PIN_INPUT_A, INPUT);
 	pinMode(PIN_INPUT_B, INPUT);
 	pinMode(PIN_SWITCHER, INPUT);
 	pinMode(PIN_OUTPUT, OUTPUT);
-
-	// interrupts to keep track of user's last interaction
-	void(*interr)() = [] { last_interaction_time = now(); };
-	attachInterrupt(digitalPinToInterrupt(PIN_INPUT_A), interr, CHANGE);
-	attachInterrupt(digitalPinToInterrupt(PIN_INPUT_B), interr, CHANGE);
-	last_interaction_time = now();
+	const auto dummy = [] { has_interaction = true; };
+	attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), dummy, CHANGE);
 }
 
 
 void loop()
 {
-	if ((now() - last_interaction_time) > 5) {
-		Serial.println("hibernating...");
-		delay(150); // let the write to serial complete
-		hibernate();
-		Serial.println("waking up...");
+	if (!has_interaction) {
+		Serial.println("Hibernating...");
+		delay(150);  // let it write to serial before hibernating
+		hibernate(); // hibernate until next user's interaction
+		Serial.println("Waking up...");
 	}
 
-	if (digitalRead(PIN_SWITCHER) == LOW) {
-		if (switchpin_released) {
-			++currgate;
-			switchpin_released = false;
+	Serial.println("Processing...");
+	has_interaction = false;
+	last_interaction = now();
+
+	do {
+		if (digitalRead(PIN_SWITCHER) == LOW) {
+			if (!pin_switch_pressed) {
+				++currgate;
+				pin_switch_pressed = true;
+				delay(50); // button bounce
+			}
+		} else {
+			pin_switch_pressed = false;
 		}
-	} else {
-		switchpin_released = true;
+
 		const bool a = digitalRead(PIN_INPUT_A) == LOW;
 		const bool b = digitalRead(PIN_INPUT_B) == LOW;
 		const bool result = executeLogicFunction(currgate, a, b);
 		digitalWrite(PIN_OUTPUT, result ? HIGH : LOW);
-	}
-
-	delay(100);
+	} while ((now() - last_interaction) < 1);
 }
 
 
