@@ -69,6 +69,7 @@ static inline bool executeLogicFunction(LogicGate gate, bool a, bool b)
 
 static inline void sleepUntilInterrupt()
 {
+	noInterrupts();
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	cli();
 	sleep_enable();
@@ -76,7 +77,6 @@ static inline void sleepUntilInterrupt()
 	sei();
 	interrupts();
 	sleep_cpu();
-	noInterrupts();
 }
 
 
@@ -85,6 +85,7 @@ void setup()
 #ifdef DEBUG_
 	Serial.begin(9600);
 #endif /* DEBUG_ */
+
 	pinMode(PIN_INTERRUPT, INPUT);
 	pinMode(PIN_INPUT_A, INPUT);
 	pinMode(PIN_INPUT_B, INPUT);
@@ -127,8 +128,6 @@ void loop()
 		const bool b   = digitalRead(PIN_INPUT_B) == LOW;
 		const bool out = executeLogicFunction(currgate, a, b);
 		digitalWrite(PIN_OUTPUT, out ? HIGH : LOW);
-		
 	} while ((now() - last_interaction) < 1);
-
 }
 
