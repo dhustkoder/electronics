@@ -121,10 +121,13 @@ void loop()
 
 	do {
 		if (digitalRead(PIN_SWITCHER) == LOW) {
+			// if switcher is pressed for 5 seconds
+			// play midi songs and do not advance currgate
 			do {
 				if ((now() - last_interaction) >= 5) {
 					playMidi(PIN_BUZZER, PIN_OUTPUT);
-					return;
+					pin_switcher_pressed = true;
+					break;
 				}
 			} while (digitalRead(PIN_SWITCHER) == LOW);
 
