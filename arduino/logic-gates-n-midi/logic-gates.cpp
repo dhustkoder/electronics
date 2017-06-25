@@ -9,8 +9,12 @@
 #endif /* DEBUG_ */
 
 
+extern void playMidi(const int pin);
+
+
 enum Pin {
 	PIN_INTERRUPT  = 2,
+	PIN_BUZZER     = 3,
 	PIN_INPUT_A    = 4,
 	PIN_INPUT_B    = 5,
 	PIN_OUTPUT     = 6,
@@ -117,6 +121,13 @@ void loop()
 
 	do {
 		if (digitalRead(PIN_SWITCHER) == LOW) {
+			do {
+				if ((now() - last_interaction) >= 5) {
+					playMidi(PIN_BUZZER);
+					return;
+				}
+			} while (digitalRead(PIN_SWITCHER) == LOW);
+
 			if (!pin_switcher_pressed) {
 				pin_switcher_pressed = true;
 				++currgate;
