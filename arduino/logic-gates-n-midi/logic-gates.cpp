@@ -9,7 +9,7 @@
 #endif /* DEBUG_ */
 
 
-extern void playMidi(const int pin);
+extern void playMidi(const int pinbuzz, const int pinblinker);
 
 
 enum Pin {
@@ -123,7 +123,7 @@ void loop()
 		if (digitalRead(PIN_SWITCHER) == LOW) {
 			do {
 				if ((now() - last_interaction) >= 5) {
-					playMidi(PIN_BUZZER);
+					playMidi(PIN_BUZZER, PIN_OUTPUT);
 					return;
 				}
 			} while (digitalRead(PIN_SWITCHER) == LOW);

@@ -193,28 +193,32 @@ static const int underworld_tempo[] = {
 };
 
 
-static inline void buzz(const int pin, const Note frequency, const long length)
+static inline void buzz(const int pinbuzzer, const int pinblinker, const Note frequency, const long length)
 {
-	digitalWrite(13, HIGH);
 	const long delay = 1000000 / frequency / 2; // calculate the delay value between transitions
 	//// 1 second's worth of microseconds, divided by the frequency, then split in half since
 	//// there are two phases to each cycle
 	const long cycles = frequency * length / 1000; // calculate the number of cycles for proper timing
 	//// multiply frequency, which is really cycles per second, by the number of seconds to
 	//// get the total number of cycles to produce
-	for (long i = 0; i < cycles; i++) { // for the calculated length of time...
-		digitalWrite(pin, HIGH); // wr	ite the buzzer pin high to push out the diaphram
-		delayMicroseconds(delay); // wait for the calculated delay value
-		digitalWrite(pin, LOW); // write the buzzer pin low to pull back the diaphram
-		delayMicroseconds(delay); // wait again or the calculated delay value
-	}
-	digitalWrite(13, LOW);
 
+	if (frequency != NOTE_NULL)
+		digitalWrite(pinblinker, HIGH);
+
+	for (long i = 0; i < cycles; i++) {    // for the calculated length of time...
+		digitalWrite(pinbuzzer, HIGH); // write the buzzer pin high to push out the diaphram
+		delayMicroseconds(delay);      // wait for the calculated delay value
+		digitalWrite(pinbuzzer, LOW);  // write the buzzer pin low to pull back the diaphram
+		delayMicroseconds(delay);      // wait again or the calculated delay value
+	}
+
+	if (frequency != NOTE_NULL)
+		digitalWrite(pinblinker, LOW);
 }
 
 
 
-static inline void sing(const int pin, const Note notes[], const int tempo[], const int size)
+static inline void sing(const int pinbuzzer, const int pinblinker, const Note notes[], const int tempo[], const int size)
 {
 	for (int note = 0; note < size; ++note) {
 		// to calculate the note duration, take one second
@@ -222,7 +226,7 @@ static inline void sing(const int pin, const Note notes[], const int tempo[], co
 		//e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
 		const int notetime = 1000 / tempo[note];
 
-		buzz(pin, notes[note], notetime);
+		buzz(pinbuzzer, pinblinker, notes[note], notetime);
 
 		// to distinguish the notes, set a minimum time between them.
 		// the note's duration + 30% seems to work well:
@@ -230,18 +234,18 @@ static inline void sing(const int pin, const Note notes[], const int tempo[], co
 		delay(pause_between_notes);
 
 		// stop the tone playing:
-		buzz(pin, NOTE_NULL, notetime);
+		buzz(pinbuzzer, pinblinker, NOTE_NULL, notetime);
 	}
 }
 
 
-void playMidi(const int pin)
+void playMidi(const int pinbuzzer, const int pinblinker)
 {
-	pinMode(pin, OUTPUT);
-	pinMode(13, OUTPUT);
-	sing(pin, mario_theme_notes, mario_theme_tempo,
+	pinMode(pinbuzzer, OUTPUT);
+	pinMode(pinblinker, OUTPUT);
+	sing(pinbuzzer, pinblinker, mario_theme_notes, mario_theme_tempo,
 	     sizeof(mario_theme_notes)/sizeof(mario_theme_notes[0]));
-	sing(pin, underworld_notes, underworld_tempo,
+	sing(pinbuzzer, pinblinker, underworld_notes, underworld_tempo,
 	     sizeof(underworld_notes)/sizeof(underworld_notes[0]));
 }
 
