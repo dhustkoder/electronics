@@ -193,6 +193,31 @@ static const int underworld_tempo[] = {
 	3, 3, 3
 };
 
+static const Note vampire_killer_notes[] = {
+	NOTE_D5, NOTE_D5, NOTE_C5, NOTE_B4,
+	NOTE_D5, NOTE_E5, NOTE_F5, NOTE_G5,
+	NOTE_A5, NOTE_D5, NOTE_A5, NOTE_G5,
+	NOTE_C5,
+
+	NOTE_D5, NOTE_D5, NOTE_C5, NOTE_B4,
+	NOTE_D5, NOTE_E5, NOTE_F5, NOTE_G5,
+	NOTE_A5, NOTE_D5, NOTE_A5, NOTE_G5,
+	NOTE_C5
+	
+};
+
+static const int vampire_killer_tempo[] = {
+	12, 12, 8, 8,
+	10, 12, 12, 12,
+	8, 8, 10, 8,
+	4,
+
+	12, 12, 8, 8,
+	10, 12, 12, 12,
+	8, 8, 10, 8,
+	4
+
+};
 
 static int pin_buzzer;
 static int pin_led_first;
@@ -259,8 +284,9 @@ void midi_play(void)
 	pin_led = pin_led_first;
 	sing(mario_theme_notes, mario_theme_tempo,
 	     sizeof(mario_theme_notes) / sizeof(mario_theme_notes[0]));
-	pin_led = pin_led_first;
 	sing(underworld_notes, underworld_tempo,
 	     sizeof(underworld_notes) / sizeof(underworld_notes[0]));
-}
+	sing(vampire_killer_notes, vampire_killer_tempo,
+	     sizeof(vampire_killer_notes) / sizeof(vampire_killer_notes[0]));
 
+}

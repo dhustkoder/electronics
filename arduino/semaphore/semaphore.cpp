@@ -114,7 +114,7 @@ void loop(void)
 		}
 
 		midi_play();
-		
+
 		for (unsigned i = LPIN_FIRST, j = 0; i <= LPIN_LAST; ++i, ++j)
 			digitalWrite(i, pinstates[j]);
 
