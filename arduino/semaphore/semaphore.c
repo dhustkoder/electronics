@@ -21,33 +21,44 @@ enum Pins {
 
 static uint16_t delays[] = { 1200, 8200, 1200, 8200 };
 static uint8_t traff_pins[] = { PIN_SEM_YELLOW, PIN_SEM_RED, PIN_SEM_YELLOW, PIN_SEM_GREEN };
-static uint8_t ped_pins[] = { PIN_PED_GREEN, PIN_PED_GREEN, PIN_PED_RED, PIN_PED_RED };
+static uint8_t ped_pins[] = { PIN_PED_RED, PIN_PED_GREEN, PIN_PED_RED, PIN_PED_RED };
+static uint8_t oldstate = 0;
 static uint8_t state = 0;
 
+
+static void update_traff(void)
+{
+	digitalWrite(traff_pins[oldstate], LOW);
+	digitalWrite(traff_pins[state], HIGH);
+}
+
+static void update_ped(void)
+{
+	digitalWrite(ped_pins[oldstate], LOW);
+	digitalWrite(ped_pins[state], HIGH);
+}
 
 void setup(void)
 {
 	for (unsigned i = PIN_FIRST; i <= PIN_LAST; ++i)
 		pinMode(i, OUTPUT);
 
+	update_ped();
+	update_traff();
 }
 
 
 void loop(void)
 {
-	const uint8_t oldstate = state;
+	delay(delays[state]);
+
+	oldstate = state;
 	if (++state == 4)
 		state = 0;
 
-	digitalWrite(traff_pins[oldstate], LOW);
-	digitalWrite(traff_pins[state], HIGH);
-
+	update_traff();
 	delay(1000);
-
-	digitalWrite(ped_pins[oldstate], LOW);
-	digitalWrite(ped_pins[state], HIGH);
-
-	delay(delays[state]);
+	update_ped();
 
 }
 
