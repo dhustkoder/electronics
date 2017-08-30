@@ -108,15 +108,15 @@ void loop(void)
 
 	if (interrupted) {
 		uint8_t pinstates[LPIN_NPINS];
-		for (unsigned i = LPIN_FIRST, j = 0; i <= LPIN_LAST; ++i, ++j) {
-			pinstates[j] = digitalRead(i);
+		for (unsigned i = LPIN_FIRST; i <= LPIN_LAST; ++i) {
+			pinstates[i - LPIN_FIRST] = digitalRead(i);
 			digitalWrite(i, LOW);
 		}
 
 		midi_play();
 
-		for (unsigned i = LPIN_FIRST, j = 0; i <= LPIN_LAST; ++i, ++j)
-			digitalWrite(i, pinstates[j]);
+		for (unsigned i = LPIN_FIRST; i <= LPIN_LAST; ++i)
+			digitalWrite(i, pinstates[i - LPIN_FIRST]);
 
 		interrupted = false;
 	}
